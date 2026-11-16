@@ -13,7 +13,7 @@ p{line-height:1.4}
 small{color:#d4f4df}
 .panel{background:#fff;color:#1b3427;border-radius:22px;padding:20px 16px;box-shadow:0 12px 30px #071e1770;margin:16px 0}
 .scene{position:relative;height:210px;display:flex;justify-content:center;align-items:center;gap:14px}
-.finn{font-size:94px;display:inline-block;animation:bob 2s ease-in-out infinite;transition:filter .4s,transform .4s;filter:drop-shadow(0 8px 4px #173a3055)}
+.finn{width:148px;height:178px;object-fit:contain;display:inline-block;animation:bob 2s ease-in-out infinite;transition:filter .4s,transform .4s;filter:drop-shadow(0 8px 4px #173a3055)}
 .sick .finn{filter:hue-rotate(75deg) saturate(2) drop-shadow(0 8px 4px #173a3055);animation:wobble .4s linear infinite}
 .cupcake{font-size:74px;display:inline-block;transform:rotate(-10deg)}
 .eaten .cupcake{opacity:0;transform:scale(.2);transition:.3s}
@@ -46,7 +46,7 @@ footer{margin:18px;font-size:.8rem;color:#cbebd8}
 <section class="panel">
 <div id="scene" class="scene">
 <span class="sparkle">✨</span>
-<span class="finn" aria-label="Finn the leprechaun">🧔🏻‍♂️</span>
+<img class="finn" src="Finn_Pop_a_Word.png" alt="Finn the leprechaun">
 <span class="cupcake" aria-label="mysterious cupcake">🧁</span>
 </div>
 <div id="message" class="bubble">Should Finn taste the mysterious cupcake?</div>
@@ -62,7 +62,7 @@ footer{margin:18px;font-size:.8rem;color:#cbebd8}
 <button id="again" class="minor">🔊 Hear Finn again</button>
 </div>
 </section>
-<footer>Speak or sing the letters yourself as you tap them. Character art is temporary.</footer>
+<footer>Speak or sing the letters yourself as you tap them. </footer>
 </main>
 <script>
 const WORD='GREEN',letters=['E','N','G','E','R'];
