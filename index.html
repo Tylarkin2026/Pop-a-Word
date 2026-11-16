@@ -1,13 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Pop-a-Word</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pop-a-Word: Rescue Finn!</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(160deg,#102e29,#21624a);color:white;font-family:system-ui,-apple-system,sans-serif;text-align:center;min-height:100vh;padding:20px}
+main{max-width:520px;margin:auto}
+h1{font-size:2rem;margin:10px 0 3px}
+p{line-height:1.4}
+small{color:#d4f4df}
+.panel{background:#fff;color:#1b3427;border-radius:22px;padding:20px 16px;box-shadow:0 12px 30px #071e1770;margin:16px 0}
+.scene{position:relative;height:210px;display:flex;justify-content:center;align-items:center;gap:14px}
+.finn{font-size:94px;display:inline-block;animation:bob 2s ease-in-out infinite;transition:filter .4s,transform .4s;filter:drop-shadow(0 8px 4px #173a3055)}
+.sick .finn{filter:hue-rotate(75deg) saturate(2) drop-shadow(0 8px 4px #173a3055);animation:wobble .4s linear infinite}
+.cupcake{font-size:74px;display:inline-block;transform:rotate(-10deg)}
+.eaten .cupcake{opacity:0;transform:scale(.2);transition:.3s}
+.sparkle{position:absolute;top:22px;right:16px;font-size:26px;animation:twinkle 1.1s infinite alternate}
+.bubble{font-size:1.15rem;font-weight:700;min-height:55px;margin:12px 0}
+.primary,button.tile,.minor{font:inherit;cursor:pointer;border:none;border-radius:14px;touch-action:manipulation}
+.primary{padding:15px 24px;font-weight:800;font-size:1.15rem;background:#ffd95d;color:#173423;width:100%;box-shadow:0 5px 0 #be9632}
+.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #be9632}
+.primary:disabled{opacity:.45}
+.minor{padding:10px 12px;background:#e3f3df;color:#174a34;margin:8px}
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin:18px 0}
+.tile{width:55px;height:61px;background:#ffe28c;font-size:1.7rem!important;font-weight:900;color:#24442a;box-shadow:0 4px #c69d42}
+.tile:disabled{opacity:.3}
+.slots{font-size:2rem;letter-spacing:.15em;color:#17643b;min-height:48px;font-weight:900}
+.notice{min-height:44px;font-weight:700;color:#265a3f}
+.word{font-size:2.4rem;color:#138b4f;font-weight:950;letter-spacing:.17em}
+.hidden{display:none}
+#step{font-weight:800;color:#17643b}
+#instruction{font-size:1.1rem}
+footer{margin:18px;font-size:.8rem;color:#cbebd8}
+@keyframes bob{50%{transform:translateY(-11px)}}
+@keyframes wobble{25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+@keyframes twinkle{to{opacity:.25;transform:scale(.7)}}
+</style>
 </head>
 <body>
-<h1>Pop-a-Word</h1>
-<p>Let's spell GREEN!</p>
+<main>
+<h1>🍀 Pop-a-Word!</h1>
+<small>Rescue Finn • Today's word: GREEN</small>
+<section class="panel">
+<div id="scene" class="scene">
+<span class="sparkle">✨</span>
+<span class="finn" aria-label="Finn the leprechaun">🧔🏻‍♂️</span>
+<span class="cupcake" aria-label="mysterious cupcake">🧁</span>
+</div>
+<div id="message" class="bubble">Should Finn taste the mysterious cupcake?</div>
+<button id="bite" class="primary">🧁 Give Finn a bite!</button>
+<div id="game" class="hidden">
+<p id="step"></p>
+<p id="instruction"></p>
+<div id="hint" class="word"></div>
+<div id="slots" class="slots" aria-live="polite"></div>
+<div id="tiles" class="tiles"></div>
+<div id="notice" class="notice" aria-live="polite"></div>
+<button id="next" class="primary hidden">Next round</button>
+<button id="again" class="minor">🔊 Hear Finn again</button>
+</div>
+</section>
+<footer>Speak or sing the letters yourself as you tap them. Character art is temporary.</footer>
+</main>
+<script>
+const WORD='GREEN',letters=['E','N','G','E','R'];
+const $=id=>document.getElementById(id);
+let round=0,entry='',used=new Set(),complete=false,audio;
+
+function speak(text){
+ if(!('speechSynthesis' in window))return;
+ try{
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';
+  u.rate=.83;
+  u.pitch=1.08;
+  speechSynthesis.speak(u);
+ }catch(e){}
+}
+
+function tone(){
+ try{
+  const A=window.AudioContext||window.webkitAudioContext;
+  if(!A)return;
+  audio=audio||new A();
+  if(audio.state==='suspended')audio.resume();
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.type='sine';
+  o.frequency.value=[392,440,494,587,659][entry.length-1]||440;
+  g.gain.setValueAtTime(.09,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.25);
+  o.connect(g);
+  g.connect(audio.destination);
+  o.start();
+  o.stop(audio.currentTime+.26);
+ }catch(e){}
+}
+
+function promptText(){
+ return round===1
+  ?'Say GREEN. Spell it aloud as you tap each letter.'
+  :round===2
+  ?'No peeking! Say GREEN and spell it from memory.'
+  :'Musical round! Sing G – R – E – E – N as you tap each letter.';
+}
+
+function setRound(n){
+ round=n;
+ entry='';
+ used.clear();
+ complete=false;
+ $('next').classList.add('hidden');
+ $('tiles').classList.remove('hidden');
+ $('step').textContent='ROUND '+round+' OF 3';
+ $('instruction').textContent=promptText();
+ $('hint').textContent=round===1?'GREEN':'';
+ $('notice').textContent='Say it, then choose your letters!';
+ draw();
+ if(round>1){
+  speak(round===2
+   ?'Great! Now say and spell green with no peeking.'
+   :'Final round! Sing the letters of green as you tap!');
+ }
+}
+
+function draw(){
+ $('slots').textContent=entry+'＿'.repeat(WORD.length-entry.length);
+ $('tiles').replaceChildren();
+ letters.forEach((letter,i)=>{
+  const b=document.createElement('button');
+  b.className='tile';
+  b.textContent=letter;
+  b.disabled=used.has(i)||complete;
+  b.setAttribute('aria-label','Letter '+letter);
+  b.addEventListener('click',()=>choose(letter,i));
+  $('tiles').appendChild(b);
+ });
+}
+
+function choose(letter,i){
+ if(complete)return;
+ if(letter!==WORD[entry.length]){
+  $('notice').textContent='Good try! Think about the next letter and try again.';
+  speak('Good try! Try the next letter again.');
+  return;
+ }
+ entry+=letter;
+ used.add(i);
+ if(round===3)tone();
+ draw();
+
+ if(entry===WORD){
+  complete=true;
+  $('notice').textContent=round===3
+   ?'🎉 You rescued Finn! All 3 rounds complete!'
+   :'⭐ You spelled GREEN!';
+  $('hint').textContent='GREEN';
+  $('next').textContent=round===3?'Play again':'Next round';
+  $('next').classList.remove('hidden');
+  $('scene').classList.remove('sick');
+  $('message').textContent=round===3
+   ?'Finn is feeling fantastic!'
+   :'Finn is getting better!';
+  speak(round===3
+   ?'You did it! You spelled green three times! Finn is saved!'
+   :'Great spelling! Green!');
+ }else{
+  $('notice').textContent='Nice! Keep going!';
+ }
+}
+
+$('bite').addEventListener('click',()=>{
+ $('scene').classList.add('sick','eaten');
+ $('bite').classList.add('hidden');
+ $('game').classList.remove('hidden');
+ $('message').textContent='BLECH! Frog socks! Hurry! Spell GREEN so I don’t croak!';
+ speak('Blech! That cupcake tastes like frog socks! Hurry! Spell green so I don’t croak!');
+ setRound(1);
+});
+
+$('next').addEventListener('click',()=>{
+ if(round===3){
+  $('scene').classList.remove('sick','eaten');
+  $('bite').classList.remove('hidden');
+  $('game').classList.add('hidden');
+  $('message').textContent='Should Finn taste the mysterious cupcake?';
+  round=0;
+  return;
+ }
+ $('scene').classList.add('sick');
+ setRound(round+1);
+});
+
+$('again').addEventListener('click',()=>speak(promptText()));
+</script>
 </body>
 </html>
-
-  
-
