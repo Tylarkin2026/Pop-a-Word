@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pop-a-Word | Adventure Maker</title>
+<style>
+:root{color-scheme:dark;--ink:#f6fff9;--muted:#c5e6e5;--mint:#b5f6b2;--yellow:#ffde88}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 85% 0%,#287b7b 0,transparent 36%),linear-gradient(160deg,#0d283f,#12334a 52%,#172840);color:var(--ink);font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;padding:15px 14px calc(env(safe-area-inset-bottom) + 22px)}
+main{width:min(100%,560px);margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 3px 12px}
+.brand{font-weight:1000;letter-spacing:-.035em;font-size:clamp(1.55rem,6vw,2.1rem)}
+.leaf{font-size:1.3rem}
+.tag{color:#d0f6f4;font-size:.72rem;padding:6px 9px;border:1px solid #79e6bf65;border-radius:999px;white-space:nowrap}
+h1{font-size:clamp(1.48rem,6vw,2rem);margin:10px 0 6px;line-height:1.1}
+p{line-height:1.45;margin:7px 0;color:var(--muted)}
+.panel{background:#ffffff10;border:1px solid #ffffff28;box-shadow:0 18px 55px #05152b66;border-radius:26px;padding:20px;backdrop-filter:blur(10px)}
+.field{margin-top:18px}
+label{display:block;font-weight:850;margin:0 0 9px}
+textarea{display:block;width:100%;height:120px;border:2px solid #88cfcaa6;background:#091f32cc;color:#fff;border-radius:17px;padding:14px;font:inherit;font-size:1.07rem;resize:vertical;outline-offset:3px}
+textarea::placeholder{color:#abc5cf}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.primary{width:100%;margin-top:16px;border:0;border-radius:16px;padding:15px 12px;background:linear-gradient(#ffeb9c,#ffc95b);color:#233b2b;box-shadow:0 5px 0 #b8863c;font-size:1.1rem;font-weight:950}
+.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #b8863c}
+.secondary{border:1px solid #d4f8ee70;background:#ffffff14;color:#f4fffb;padding:9px 13px;border-radius:12px;font-weight:750}
+.secondary:active{background:#ffffff2b}
+.help{font-size:.85rem;color:#b8d7dc;margin-top:10px}
+.error{font-weight:760;color:#ffe2a0;min-height:22px}
+#play{display:none}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.progress{font-size:.84rem;font-weight:800;color:#c0f2e0}
+.sceneFrame{margin-top:14px;border-radius:22px;overflow:hidden;border:1px solid #84e2be66;background:radial-gradient(circle at 48% 39%,#216f7b,#102f49 68%);box-shadow:inset 0 0 38px #0f182a9c}
+#sceneHost{width:100%;aspect-ratio:420/250}
+#sceneHost canvas{display:block}
+.scenecaption{text-align:center;font-size:.84rem;background:#061e329a;color:#d9f8ee;padding:9px 12px;min-height:38px}
+.gamecard{background:#f8fff7;color:#234136;border-radius:23px;padding:16px;margin-top:14px;box-shadow:0 10px 30px #05172650}
+.gamecard p{color:#426058}
+#stage{color:#26714e;font-weight:1000;font-size:.75rem;letter-spacing:.13em}
+#challenge{font-size:1.08rem;color:#204338;font-weight:800;min-height:42px;margin:8px 0}
+#cue{min-height:38px;color:#346a58;font-size:.9rem;font-weight:600}
+#hint{font-size:clamp(1.8rem,8vw,2.45rem);font-weight:1000;letter-spacing:.13em;color:#237c4d;min-height:51px;text-align:center;word-break:break-all}
+#answer{font-size:clamp(1.6rem,7vw,2.1rem);min-height:48px;text-align:center;letter-spacing:.12em;font-weight:1000;color:#153f3b}
+#tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;min-height:62px;padding:8px 0}
+.tile{height:56px;min-width:48px;border:0;border-radius:13px;background:#ffdc78;color:#2d4737;box-shadow:0 3px 0 #c39e52;font-size:1.5rem;font-weight:1000}
+.tile:disabled{opacity:.24;box-shadow:none}
+#feedback{min-height:46px;color:#235a45;text-align:center;font-weight:800;padding:8px 0}
+.actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.actions .secondary{color:#24513e;background:#e1f2e9;border:1px solid #b4d9c0}
+#advance{display:none}
+#done{display:none;text-align:center}
+#done .icon{font-size:4.5rem;display:block;margin:12px 0}
+#done h1{font-size:2rem}
+footer{font-size:.77rem;color:#b1d5db;line-height:1.5;padding:18px 10px}
+@media(max-width:365px){.tile{min-width:43px;height:51px;font-size:1.35rem}.panel{padding:15px}.gamecard{padding:12px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand"><span class="leaf">🍀</span> Pop-a-Word!</div><span class="tag">Adventure Maker • Preview</span></header>
+<section id="setup" class="panel">
+<h1>Your words. Your adventure.</h1>
+<p>Type your spelling words and watch Pop-a-Word turn them into games. You get to be the adventure maker!</p>
+<div class="field">
+<label for="wordInput">My spelling words</label>
+<textarea id="wordInput" spellcheck="false" autocomplete="off" autocapitalize="none" placeholder="green, robot, candle, remove, beautiful"></textarea>
+<div class="help">Separate words with commas or put each word on a new line. Try 2–12 words.</div>
+</div>
+<button class="primary" id="make">✨ Make my adventures!</button>
+<div id="inputError" class="error" aria-live="polite"></div>
+</section>
+<section id="play" aria-live="off">
+<div class="topline">
+<span id="progress" class="progress"></span>
+<button id="editWords" class="secondary">✎ My words</button>
+</div>
+<div class="sceneFrame">
+<div id="sceneHost" role="img" aria-label="Adventure illustration"></div>
+<div id="sceneCaption" class="scenecaption"></div>
+</div>
+<div class="gamecard">
+<div id="stage"></div>
+<div id="challenge"></div>
+<div id="cue"></div>
+<div id="hint"></div>
+<div id="answer" aria-live="polite"></div>
+<div id="tiles" aria-label="Choose the letters in order"></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+<div class="actions">
+<button id="hear" class="secondary">🔊 Hear the word</button>
+<button id="advance" class="primary">Next round</button>
+</div>
+</div>
+</section>
+<section id="done" class="panel">
+<span class="icon">🏆</span>
+<h1>Word wizard!</h1>
+<p id="doneText"></p>
+<button id="replay" class="primary">Play these words again</button>
+<button id="newList" class="secondary" style="margin-top:14px">Enter new words</button>
+</section>
+<footer>This preview tests automatic word-to-adventure selection and three spelling rounds. Final character animation, authentic Irish voice recordings, speech recognition, and advanced sound-to-letter lessons are still in development.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const maxWords=12;
+const known={
+ green:{type:"finn",title:"Finn's cupcake surprise",line:"Help Finn feel better by spelling GREEN!",cue:"GREEN begins with GR. Listen for the /g/ and /r/ sounds together."},
+ robot:{type:"robot",title:"Robot dance party",line:"Move your arms like a robot as you spell!",cue:"ROBOT has two beats: RO and BOT. Say each part clearly."},
+ candle:{type:"candle",title:"The magical candle",line:"Watch a candle glow as you spell its name.",cue:"CANDLE begins with CAN and ends with DLE."},
+ remove:{type:"remove",title:"The disappearing trick",line:"Make objects disappear and return!",cue:"REMOVE starts with RE and ends with MOVE."},
+ beautiful:{type:"beauty",title:"Make something beautiful",line:"Turn a quiet scene into a sparkling surprise.",cue:"BEAUTIFUL is a long word. Try its three parts: BEAU, TI, FUL."}
+};
+const groups=[
+ {terms:"jump hop skip run dance swim march",type:"motion",title:"Move-it adventure",line:"Act out the word while you spell!"},
+ {terms:"rain rainy cloud storm snow wind sunshine sunny thunder",type:"weather",title:"Weather wonders",line:"Watch the sky change as you spell."},
+ {terms:"water ocean sea river lake wave beach",type:"ocean",title:"Underwater adventure",line:"Take a journey across the water."},
+ {terms:"flower tree garden leaf seed grass",type:"garden",title:"Growing magic",line:"Let the magical garden grow."},
+ {terms:"red blue yellow purple orange pink black white",type:"beauty",title:"Color burst",line:"Brighten the world with your spelling."},
+ {terms:"cat dog puppy kitten bird fish bunny",type:"animal",title:"Animal parade",line:"Imagine your animal joining the parade!"}
+];
+function adventure(word){
+ if(known[word])return known[word];
+ for(const group of groups)if(group.terms.split(" ").includes(word))return group;
+ return {type:"portal",title:"The word portal",line:"Every new word opens a new adventure!"};
+}
+let words=[],wordIndex=0,round=1,answer="",tiles=[],used=new Set(),finished=false,visual=null,scene;
+const notes=[392,440,494,523,587,659,698,784],Audio=window.AudioContext||window.webkitAudioContext;
+let audio;
+function note(n){
+ try{if(!Audio)return;audio=audio||new Audio();if(audio.state==="suspended")audio.resume();
+ const oscillator=audio.createOscillator(),gain=audio.createGain();
+ oscillator.type="sine";oscillator.frequency.value=notes[n%notes.length];gain.gain.setValueAtTime(.085,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.29);
+ oscillator.connect(gain);gain.connect(audio.destination);oscillator.start();oscillator.stop(audio.currentTime+.3)
+ }catch(err){}
+}
+function talk(text){
+ try{if(!("speechSynthesis" in window))return;window.speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(text);utterance.lang="en-US";utterance.rate=.85;window.speechSynthesis.speak(utterance)
+ }catch(err){}
+}
+function shuffledLetters(word){
+ const list=word.toUpperCase().split("").map((letter,i)=>({letter,i}));
+ for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]]}
+ return list;
+}
+function parseWords(value){
+ const pieces=value.split(/[,\n;]+/).map(w=>w.trim().toLowerCase()).filter(Boolean),list=[];
+ for(const piece of pieces){
+  if(!/^[a-z]{2,18}$/.test(piece))return {error:"Use single words with letters only (2–18 letters each)."};
+  if(!list.includes(piece))list.push(piece);
+ }
+ if(list.length<1)return {error:"Please type at least one spelling word."};
+ if(list.length>maxWords)return {error:"Choose up to 12 words per adventure."};
+ return {list};
+}
+function start(){
+ const result=parseWords($("wordInput").value);
+ if(result.error){$("inputError").textContent=result.error;return}
+ words=result.list;wordIndex=0;
+ try{localStorage.setItem("popaword-words",words.join(", "))}catch(err){}
+ $("inputError").textContent="";$("setup").style.display="none";$("done").style.display="none";$("play").style.display="block";
+ showWord();
+}
+function showWord(){
+ round=1;
+ const word=words[wordIndex],story=adventure(word);
+ $("progress").textContent="Adventure "+(wordIndex+1)+" of "+words.length+" · "+word.toUpperCase();
+ $("sceneCaption").textContent=story.title+" · "+story.line;
+ renderScene(word,story.type);showRound();
+}
+function showRound(){
+ const word=words[wordIndex],story=adventure(word);
+ answer="";finished=false;used.clear();tiles=shuffledLetters(word);
+ $("stage").textContent="SPELLING ROUND "+round+" OF 3";
+ $("hint").textContent=round===1?word.toUpperCase():"";
+ $("challenge").textContent=round===1?
+ "Say the word. Then say each letter as you tap it.":
+ round===2?"No peeking! Say the word, then spell it from memory.":
+ "Musical round! Sing the letters as you tap them.";
+ $("cue").textContent=round===1?(story.cue||"Listen carefully to the word, then notice its letters."):"";
+ $("feedback").textContent=round===1?"You're in charge of this adventure!":round===2?"You can do it without looking at the word!":"Sing it your way!";
+ $("advance").style.display="none";draw();
+}
+function draw(){
+ const target=words[wordIndex].toUpperCase();
+ $("answer").textContent=answer+"＿".repeat(target.length-answer.length);
+ const root=$("tiles");root.replaceChildren();
+ for(const entry of tiles){
+ const button=document.createElement("button");button.className="tile";button.textContent=entry.letter;
+ button.disabled=used.has(entry.i)||finished;button.setAttribute("aria-label","Letter "+entry.letter);
+ button.addEventListener("click",()=>pick(entry,button));root.append(button);
+ }
+}
+function pick(entry,button){
+ if(finished)return;
+ const target=words[wordIndex].toUpperCase();
+ if(entry.letter!==target[answer.length]){
+ $("feedback").textContent="Good try! That isn't the next letter. Try again.";
+ button.animate?.([{transform:"translateX(-3px)"},{transform:"translateX(3px)"},{transform:"translateX(0)"}],{duration:170});
+ return;
+ }
+ used.add(entry.i);answer+=entry.letter;
+ if(round===3)note(answer.length-1);
+ draw();
+ if(answer===target){
+ finished=true;draw();$("hint").textContent=target;
+ $("feedback").textContent=round===3?"🎉 You sang and spelled the whole word!":"⭐ Great spelling!";
+ $("advance").textContent=round<3?"Next round":wordIndex<words.length-1?"Next adventure":"Finish adventures";
+ $("advance").style.display="block";
+ if(scene&&scene.celebrate)scene.celebrate();
+ talk(round===3?"Amazing! You spelled "+words[wordIndex]+"!":"Well done! "+words[wordIndex]+".");
+ }else $("feedback").textContent="That's it! Keep going.";
+}
+function advance(){
+ if(!finished)return;
+ if(round<3){round++;showRound();talk(round===2?"Your turn! Spell "+words[wordIndex]+" from memory.":"Sing and spell "+words[wordIndex]+"!");return}
+ wordIndex++;
+ if(wordIndex<words.length){showWord();talk("Next word: "+words[wordIndex]);return}
+ $("play").style.display="none";$("done").style.display="block";
+ $("doneText").textContent="You explored "+words.length+" word"+(words.length===1?"":"s")+" and completed "+(words.length*3)+" spelling rounds. Fantastic effort!";
+ talk("You did it! Congratulations, word wizard!");
+}
+function returnToInput(){
+ $("play").style.display="none";$("done").style.display="none";$("setup").style.display="block";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("make").addEventListener("click",start);
+$("advance").addEventListener("click",advance);
+$("hear").addEventListener("click",()=>talk(words[wordIndex]));
+$("editWords").addEventListener("click",returnToInput);
+$("newList").addEventListener("click",returnToInput);
+$("replay").addEventListener("click",()=>{wordIndex=0;$("done").style.display="none";$("play").style.display="block";showWord()});
+try{const saved=localStorage.getItem("popaword-words");if(saved)$("wordInput").value=saved}catch(err){}
+
+// Phaser handles the visual adventure layer. The spelling logic above is shared across all scenes.
+function renderScene(word,type){
+ if(scene&&scene.setAdventure)scene.setAdventure(word,type);
+}
+if(typeof Phaser==="undefined"){
+ $("sceneHost").textContent="Adventure art is loading. The spelling game is still available.";
+ return;
+}
+class AdventureScene extends Phaser.Scene{
+ constructor(){super("Adventure");this.actors=[];this.celebrateObjects=[]}
+ preload(){this.load.image("finn","Finn_Pop_a_Word.png")}
+ create(){
+  scene=this;this.setAdventure(words[wordIndex]||"green","portal");
+ }
+ clearActors(){
+  this.tweens.killAll();
+  this.children.removeAll(true);this.actors=[];this.celebrateObjects=[];
+ }
+ circle(x,y,r,color,alpha=1){return this.add.circle(x,y,r,color,alpha)}
+ star(x,y,text,size=30){return this.add.text(x,y,text,{fontFamily:"system-ui",fontSize:size+"px"}).setOrigin(.5)}
+ setAdventure(word,type){
+  this.clearActors();this.type=type;
+  this.add.ellipse(210,244,265,35,0x061726,.32);
+  for(let i=0;i<13;i++){
+   const dot=this.circle(12+Math.random()*396,12+Math.random()*220,1+Math.random()*3,0xd5fff0,.35+Math.random()*.45);
+   this.tweens.add({targets:dot,alpha:.12,scale:1.7,duration:1300+Math.random()*1400,yoyo:true,repeat:-1});
+  }
+  if(type==="finn"){
+   if(this.textures.exists("finn")){
+    const img=this.add.image(205,125,"finn").setDisplaySize(230,230);
+    this.tweens.add({targets:img,y:122,duration:1900,ease:"Sine.InOut",yoyo:true,repeat:-1});
+   }else this.star(210,120,"🍀",100);
+   this.star(345,65,"🧁",48);
+  }else if(type==="robot"){
+   const g=this.add.graphics();
+   g.fillStyle(0xaee9e6,1);g.fillRoundedRect(128,52,164,119,20);
+   g.fillStyle(0x426b91,1);g.fillRoundedRect(150,69,121,72,12);
+   g.fillStyle(0xf0f9be,1);g.fillCircle(179,104,13);g.fillCircle(243,104,13);
+   g.lineStyle(5,0xaee9e6);g.strokeLineShape(new Phaser.Geom.Line(210,54,210,30));
+   g.fillStyle(0xf1ce77,1);g.fillCircle(210,25,9);
+   g.lineStyle(12,0xaee9e6);g.strokeLineShape(new Phaser.Geom.Line(129,146,98,174));g.strokeLineShape(new Phaser.Geom.Line(291,146,322,174));
+   g.fillStyle(0x426b91,1);g.fillRoundedRect(151,173,118,50,12);
+   this.star(210,112,"⚡",29);
+   this.tweens.add({targets:g,angle:{from:-3,to:3},duration:450,yoyo:true,repeat:-1});
+  }else if(type==="candle"){
+   const g=this.add.graphics();g.fillStyle(0xf8f0d2);g.fillRoundedRect(173,108,74,112,9);
+   g.fillStyle(0xe2b76d);g.fillRoundedRect(180,181,60,33,8);
+   g.lineStyle(4,0x3a3231);g.strokeLineShape(new Phaser.Geom.Line(210,105,210,89));
+   const flame=this.add.ellipse(210,65,34,61,0xffd256,.94);
+   this.add.ellipse(210,69,16,37,0xfff5c1,.94);
+   this.tweens.add({targets:flame,scaleX:.78,scaleY:1.09,alpha:.75,duration:380,yoyo:true,repeat:-1});
+   this.circle(210,90,70,0xffd256,.10).setBlendMode("ADD");
+  }else if(type==="remove"){
+   const colors=[0x8eecba,0xf6c879,0xc3a0ff];
+   for(let i=0;i<3;i++){
+    const rect=this.add.rectangle(112+i*97,128,74,74,colors[i]).setStrokeStyle(3,0xffffff,.75);
+    this.tweens.add({targets:rect,angle:{from:-6,to:6},duration:800+i*180,repeat:-1,yoyo:true});
+   }
+  }else if(type==="beauty"||type==="garden"){
+   this.star(210,145,type==="garden"?"🌷":"✨",105);
+   for(let i=0;i<7;i++){
+    const petal=this.star(70+i*46,50+(i%3)*65,i%2?"✦":"✿",26);
+    this.tweens.add({targets:petal,scale:1.45,alpha:.45,duration:500+i*95,yoyo:true,repeat:-1});
+   }
+  }else if(type==="weather"){
+   this.star(210,107,"🌦️",125);this.star(315,190,"💧",33);
+  }else if(type==="ocean"){
+   this.star(210,112,"🌊",120);this.star(320,170,"🐠",36);
+  }else if(type==="motion"){
+   this.star(210,113,"⭐",125);
+   const item=this.star(80,180,"💫",40);
+   this.tweens.add({targets:item,x:330,duration:1600,yoyo:true,repeat:-1});
+  }else if(type==="animal"){
+   this.star(210,115,"🐾",120);this.star(315,192,"✨",36);
+  }else{
+   this.star(210,108,"✨",112);
+   const portal=this.add.circle(210,125,92).setStrokeStyle(5,0x8de7f8,.7);
+   this.tweens.add({targets:portal,scale:1.12,alpha:.35,duration:1500,yoyo:true,repeat:-1});
+  }
+  const title=this.add.text(210,18,word.toUpperCase(),{fontFamily:"system-ui",fontSize:"18px",fontStyle:"bold",color:"#e6fff6",stroke:"#13314a",strokeThickness:3}).setOrigin(.5);
+  this.actors.push(title);
+ }
+ celebrate(){
+  for(let i=0;i<18;i++){
+   const sym=this.star(30+Math.random()*360,30+Math.random()*170,i%2?"✦":"★",17+Math.random()*17).setAlpha(0);
+   this.tweens.add({targets:sym,alpha:1,scale:1.35,y:"-=35",duration:370,delay:i*28,yoyo:true,onComplete:()=>sym.destroy()});
+  }
+ }
+}
+new Phaser.Game({
+ type:Phaser.AUTO,parent:"sceneHost",width:420,height:250,backgroundColor:"#11334d",
+ scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
+ render:{antialias:true,pixelArt:false},
+ scene:[AdventureScene]
+});
+})();
+</script>
+</body>
+</html>
